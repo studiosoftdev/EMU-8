@@ -16,28 +16,27 @@
 /* Program entry point */
 
 bool loadGame(const char * filename);
+void display();
 
 unsigned char memory [4096];
-unsigned char reg [0xF][8];
+unsigned char reg [0xF];
+unsigned char I [2];
+unsigned int stimer = 0;
+unsigned int timer = 0;
+unsigned int pc = 0;
+unsigned int sp = 0;
 
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
     glutInitWindowSize(640,480);
     glutInitWindowPosition(640,300);
-    glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
-
-    glClear(GL_COLOR_BUFFER_BIT);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluOrtho2D(0.0, 640.0, 480.0, 0.0);
-        glBegin(GL_POINTS);
-        glColor3f(1,1,1);
-        glVertex2i(180, 15);
-        glEnd();
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+    glutDisplayFunc(display);
+	glutIdleFunc(display);
 
     if(argc < 2){
-        //return 1;
+        return 1;
     }
     if(!loadGame(argv[1])){
         return 1;
@@ -45,7 +44,11 @@ int main(int argc, char *argv[])
 
     glutCreateWindow("EMU-8");
 
-    Sleep(3000);
+    for(int i = 0; i < 256; i++){
+        printf("%c", memory[i + 512]);
+    }
+
+    //Sleep(3000);
 
     return EXIT_SUCCESS;
 }
@@ -88,4 +91,8 @@ bool loadGame (const char * filename){
 	free(buffer);
 
 	return true;
+}
+
+void display(){
+    printf("dap");
 }
