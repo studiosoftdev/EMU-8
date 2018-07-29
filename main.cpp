@@ -115,20 +115,24 @@ void emulateCycle(){
             case 0x00:  if((instruction & 0x00FF) == 0x00E0){ std::cout << std::hex << opcode << " | " << instruction << " | CLS\n";pc += 2;break;}
                         if((instruction & 0x00FF) == 0x00EE){ std::cout << std::hex << opcode << " | " << instruction << " | RET\n";pc = popStack() + 2;sp--;break;}
             case 0x01:  std::cout << std::hex << opcode << " | " << instruction << " | JP\n";
-                        pc = (instruction & 0x0FFF)/*dadddadada*/;
+                        pc = (instruction & 0x0FFF);
                         std::cout << pc << "\n";
                         break;
             case 0x02:  std::cout << std::hex << opcode << " | " << instruction << " | CALL\n";
                         pushStack(pc);
-                        pc = (instruction & 0x0FFF)/*YYYEYEYEYE*/;
+                        pc = (instruction & 0x0FFF);
                         break;
             case 0x03:  std::cout << std::hex << opcode << " | " << instruction << " | SE [skip if Vx = byte]\n";
                         if(Vreg[(instruction & 0x0F00) >> 8] == (instruction & 0x00FF)){pc += 4;}
-                        if(!(Vreg[(instruction & 0x0F00) >> 8] == (instruction & 0x00FF))){pc += 2;}
+                        if(Vreg[(instruction & 0x0F00) >> 8] != (instruction & 0x00FF)){pc += 2;}
                         break;
-            case 0x04:  std::cout << std::hex << opcode << " | " << instruction << " | SNE\n";pc += 2;
+            case 0x04:  std::cout << std::hex << opcode << " | " << instruction << " | SNE\n";
+                        if(Vreg[((instruction & 0x0F00) >> 8)] == Vreg[((instruction & 0x00F0) >> 8)]){pc+=2;}
+                        pc += 2;
                         break;
-            case 0x05:  std::cout << std::hex << opcode << " | " << instruction << " | SE [skip if Vx = Vy]\n";pc += 2;
+            case 0x05:  std::cout << std::hex << opcode << " | " << instruction << " | SE [skip if Vx = Vy]\n";
+                        if(Vreg[((instruction & 0x0F00) >> 8)] == Vreg[((instruction & 0x00F0) >> 8)]){pc+=2;}
+                        pc += 2;
                         break;
             case 0x06:  std::cout << std::hex << opcode << " | " << instruction << " | LD [Vx, byte]\n";
                         Vreg[(instruction & 0x0F00) >> 8] = (instruction & 0x00FF);
@@ -137,14 +141,30 @@ void emulateCycle(){
             case 0x07:  std::cout << std::hex << opcode << " | " << instruction << " | ADD [Vx, byte]\n";
                         Vreg[(instruction & 0x0F00) >> 8] += (instruction & 0x00FF); pc += 2;
                         break;
-            case 0x08:  if((instruction & 0x000F) == 0x0000){ std::cout << std::hex << opcode << " | " << instruction << " | LD [Vx = Vy]\n";pc += 2;break;}
-                        if((instruction & 0x000F) == 0x0001){ std::cout << std::hex << opcode << " | " << instruction << " | OR [Vx | Vy]\n";pc += 2;break;}
-                        if((instruction & 0x000F) == 0x0002){ std::cout << std::hex << opcode << " | " << instruction << " | AND [Vx & Vy]\n";pc += 2;break;}
-                        if((instruction & 0x000F) == 0x0003){ std::cout << std::hex << opcode << " | " << instruction << " | XOR [Vx, Vy]\n";pc += 2;break;}
-                        if((instruction & 0x000F) == 0x0004){ std::cout << std::hex << opcode << " | " << instruction << " | ADD [Vx + Vy]\n";pc += 2;break;}
-                        if((instruction & 0x000F) == 0x0005){ std::cout << std::hex << opcode << " | " << instruction << " | SUB [Vx - Vy]\n";pc += 2;break;}
-                        if((instruction & 0x000F) == 0x0006){ std::cout << std::hex << opcode << " | " << instruction << " | SHR [Vx >> 1]\n";pc += 2;break;}
-                        if((instruction & 0x000F) == 0x0007){ std::cout << std::hex << opcode << " | " << instruction << " | SUBN [Vx = Vx - Vy, Vf NOT BORROW]\n";pc += 2;break;}
+            case 0x08:  if((instruction & 0x000F) == 0x0000){ std::cout << std::hex << opcode << " | " << instruction << " | LD [Vx = Vy]\n";
+                            Vreg[((instruction & 0x0F00) >> 8)] = Vreg[((instruction & 0x00F0) >> 8)];pc += 2;break;}
+
+                        if((instruction & 0x000F) == 0x0001){ std::cout << std::hex << opcode << " | " << instruction << " | OR [Vx | Vy]\n";
+                            Vreg[((instruction & 0x0F00) >> 8)] = Vreg[((instruction & 0x0F00) >> 8)] | Vreg[((instruction & 0x00F0) >> 4)];pc += 2; break;}
+
+                        if((instruction & 0x000F) == 0x0002){ std::cout << std::hex << opcode << " | " << instruction << " | AND [Vx & Vy]\n";
+                            Vreg[((instruction & 0x0F00) >> 8)] = Vreg[((instruction & 0x0F00) >> 8)] & Vreg[((instruction & 0x00F0) >> 4)];pc += 2; break;}
+
+                        if((instruction & 0x000F) == 0x0003){ std::cout << std::hex << opcode << " | " << instruction << " | XOR [Vx, Vy]\n";
+                            Vreg[((instruction & 0x0F00) >> 8)] = Vreg[((instruction & 0x0F00) >> 8)] ^ Vreg[((instruction & 0x00F0) >> 4)];pc += 2; break;}
+
+                        if((instruction & 0x000F) == 0x0004){ std::cout << std::hex << opcode << " | " << instruction << " | ADD [Vx + Vy]\n";
+                            Vreg[((instruction & 0x0F00) >> 8)] = Vreg[((instruction & 0x0F00) >> 8)] + Vreg[((instruction & 0x00F0) >> 4)];pc += 2; break;} //Vf CARRY
+
+                        if((instruction & 0x000F) == 0x0005){ std::cout << std::hex << opcode << " | " << instruction << " | SUB [Vx - Vy]\n";
+                            Vreg[((instruction & 0x0F00) >> 8)] = Vreg[((instruction & 0x0F00) >> 8)] - Vreg[((instruction & 0x00F0) >> 4)];pc += 2; break;} //Vf NOT BORROW
+
+                        if((instruction & 0x000F) == 0x0006){ std::cout << std::hex << opcode << " | " << instruction << " | SHR [Vx >> 1]\n";
+                            Vreg[((instruction & 0x0F00) >> 8)] = Vreg[((instruction & 0x0F00) >> 8)] >> 1;pc += 2; break;}
+
+                        if((instruction & 0x000F) == 0x0007){ std::cout << std::hex << opcode << " | " << instruction << " | SUBN [Vx = Vx - Vy, Vf NOT BORROW]\n";
+                            Vreg[((instruction & 0x0F00) >> 8)] = Vreg[((instruction & 0x0F00) >> 8)] - Vreg[((instruction & 0x00F0) >> 4)];pc += 2; break;} //Vf NOT BORROW
+
                         if((instruction & 0x000F) == 0x000E){ std::cout << std::hex << opcode << " | " << instruction << " | SHL [Vx << 1]\n";pc += 2;break;}
             case 0x09:  std::cout << std::hex << opcode << " | " << instruction << " | SNE [skip if Vx != Vy]\n";pc += 2;
                         break;
