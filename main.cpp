@@ -35,7 +35,6 @@ unsigned __int8 screenData[SCREENH][SCREENW][3];
 unsigned char gfx [2048]; //total number of pixels
 bool drawFlag = false;
 
-int tempCC = 0; //temporary Cycle Counter to imitate a constant refresh
 
 int main(int argc, char *argv[])
 {
@@ -52,7 +51,7 @@ int main(int argc, char *argv[])
 
     for(int i = 0; i < 2048; i++){
         if(i < 1024){
-            gfx[i] = 1;
+            gfx[i] = 0;
         }
         else{gfx[i] = 100;}
     }
@@ -60,7 +59,7 @@ int main(int argc, char *argv[])
     drawFlag = true;
 
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowSize(SCREENW * 10,SCREENH * 10);
     glutInitWindowPosition(640,300);
     glutCreateWindow("EMU-8");
@@ -171,7 +170,6 @@ void updateTexture()
 
 
 void emulateCycle(){
-    do{
         unsigned int instruction = memory[pc] << 8 | memory[pc + 1];
         unsigned int opcode = instruction >> 12;
         //std::cout << instruction << " | " << opcode << std::endl;
@@ -194,12 +192,10 @@ void emulateCycle(){
                         pc = (instruction & 0x0FFF);
                         break;
             case 0x03:  std::cout << std::hex << opcode << " | " << instruction << " | SE [skip if Vx = byte]\n";
-                        if(Vreg[(instruction & 0x0F00) >> 8] == (instruction & 0x00FF)){
-                        	pc += 4;
-                        }
-                        if(Vreg[(instruction & 0x0F00) >> 8] != (instruction & 0x00FF)){
+                        if(Vreg[((instruction & 0x0F00) >> 8)] == (instruction & 0x00FF)){
                         	pc += 2;
                         }
+                        pc += 2;
                         break;
             case 0x04:  std::cout << std::hex << opcode << " | " << instruction << " | SNE\n";
                         if(Vreg[((instruction & 0x0F00) >> 8)] == Vreg[((instruction & 0x00F0) >> 8)]){
@@ -349,9 +345,7 @@ void emulateCycle(){
                 break;
 
         }
-        tempCC++;
         //std::cout << "SP: " << sp << " | stack[sp]: " << stacc[sp] << " | PC:" << pc << std::endl;
-    } while (tempCC < 0);
 
 
 
